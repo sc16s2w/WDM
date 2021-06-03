@@ -8,6 +8,8 @@ public class OrderCallActor implements Callable {
     private Integer amount;
     private String user_id;
     private String order_id;
+    private String item_id;
+    private Integer change;
     public OrderCallActor(String actorId, OrderActor actor, Integer type){
         this.actorId = actorId;
         this.actor  = actor;
@@ -25,12 +27,19 @@ public class OrderCallActor implements Callable {
         this.actor = actor;
         this.type = type;
     }
-//    public OrderCallActor(String actorId, OrderActor actor, Integer type, String order_id){
-//        this.order_id = order_id;
-//        this.actorId = actorId;
-//        this.actor = actor;
-//        this.type = type;
-//    }
+    public OrderCallActor(String actorId, OrderActor actor, String order_id, Integer type){
+        this.order_id = order_id;
+        this.actorId = actorId;
+        this.actor = actor;
+        this.type = type;
+    }
+    public OrderCallActor(String actorId, OrderActor actor, String item_id, Integer type, Integer change){
+        this.item_id = item_id;
+        this.actorId = actorId;
+        this.actor = actor;
+        this.type = type;
+        this.change = change;
+    }
     @Override
     public Object call() throws Exception {
         actor.registerReminder();
@@ -43,7 +52,7 @@ public class OrderCallActor implements Callable {
                 break;
             }
             case 2:{
-                actor.remove_order();
+                actor.remove_order(order_id);
                 result = "0";
                 break;
             }
@@ -53,9 +62,12 @@ public class OrderCallActor implements Callable {
             }
             case 4:{
                 System.out.println("3");
-                result = actor.add_item().block().toString();
+                result = actor.add_item(item_id).block().toString();
                 System.out.println("4");
                 break;
+            }
+            case 5:{
+                result = actor.remove_item(item_id).block().toString();
             }
         }
         return result;

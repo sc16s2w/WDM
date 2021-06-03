@@ -1,10 +1,7 @@
 package com.example.wdm.order;
 import io.dapr.actors.ActorId;
-import io.dapr.actors.runtime.AbstractActor;
-import io.dapr.actors.runtime.ActorRuntimeContext;
-import io.dapr.actors.runtime.Remindable;
+import io.dapr.actors.runtime.*;
 import io.dapr.utils.TypeRef;
-import io.dapr.v1.DaprProtos;
 import reactor.core.publisher.Mono;
 
 import java.text.DateFormat;
@@ -12,7 +9,6 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 import java.util.TimeZone;
 
 public class OrderActorImpl extends AbstractActor implements OrderActor, Remindable<Integer> {
@@ -29,11 +25,19 @@ public class OrderActorImpl extends AbstractActor implements OrderActor, Reminda
      */
     public OrderActorImpl (ActorRuntimeContext runtimeContext, ActorId id) {
         super(runtimeContext, id);
+
+//        super.registerActorTimer(
+//                null,
+//                "clock",
+//                "ping!",
+//                Duration.ofSeconds(2),
+//                Duration.ofSeconds(1)).block();
     }
 
     /**
      * Registers a reminder.
      */
+
     @Override
     public void registerReminder() {
         super.registerReminder(
@@ -54,14 +58,31 @@ public class OrderActorImpl extends AbstractActor implements OrderActor, Reminda
         return Mono.just(this.getId().toString());
     }
 
+//    @Override
+//    public Mono<String> remove_order(String order_id) {
+//        System.out.println(this.getId());
+//        System.out.println("service delete order: ");
+////        ActorStateChangeKind.REMOVE();
+////        DaprProtos.DeleteBulkStateRequest.Builder.removeStates(this.getId());
+//        System.out.println(order_id);
+//        ActorRuntime.getInstance().deactivate("OrderActor",order_id).block();
+////        super.getActorStateManager().remove("paid").block();
+////        super.getActorStateManager().remove("items").block();
+////        super.getActorStateManager().remove("user_id").block();
+////        super.getActorStateManager().remove("total_cost").block();
+//        return Mono.just("delete successful");
+//    }
+
     @Override
-    public void remove_order() {
+    public void remove_order(String order_id) {
         System.out.println("service delete order: ");
+//        ActorStateChangeKind.REMOVE();
 //        DaprProtos.DeleteBulkStateRequest.Builder.removeStates(this.getId());
         super.getActorStateManager().remove("paid").block();
         super.getActorStateManager().remove("items").block();
         super.getActorStateManager().remove("user_id").block();
         super.getActorStateManager().remove("total_cost").block();
+        super.getActorStateManager().remove(order_id).block();
     }
 
     @Override
@@ -76,19 +97,27 @@ public class OrderActorImpl extends AbstractActor implements OrderActor, Reminda
     }
 
     @Override
-    public Mono<String> add_item() {
-        return null;
+    public Mono<String> add_item(String item_id) {
+        ArrayList<String> items = super.getActorStateManager().get("items", ArrayList.class).block();
+        items.add(item_id);
+        super.getActorStateManager().set("items", items).block();
+        return Mono.just("success");
     }
 
     @Override
-    public Mono<String> remove_Item() {
-        return null;
+    public Mono<String> remove_item(String item_id) {
+        ArrayList<String> items = super.getActorStateManager().get("items", ArrayList.class).block();
+        items.remove(item_id);
+        System.out.println(items);
+        super.getActorStateManager().set("items", items).block();
+        return Mono.just("success");
     }
 
     @Override
     public Mono<String> checkout() {
         return null;
     }
+
 
     /**
      * Method used to determine reminder's state type.
@@ -98,6 +127,15 @@ public class OrderActorImpl extends AbstractActor implements OrderActor, Reminda
     public TypeRef<Integer> getStateType() {
         return TypeRef.INT;
     }
+//
+//    @Override
+//    public void clock(String message){
+//        Calendar utcNow = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+//        String utcNowAsString = DATE_FORMAT.format(utcNow.getTime());
+//        System.out.println("Server timer for actor "
+//                + super.getId() + ": "
+//                + (message == null ? "" : message + " @ " + utcNowAsString));
+//    }
 
     /**
      * Method used be invoked for a reminder.

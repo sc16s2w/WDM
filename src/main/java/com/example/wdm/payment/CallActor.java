@@ -20,6 +20,8 @@ public class CallActor implements Callable {
         this.type = type;
         this.amount = amount;
     }
+
+
     @Override
     public Object call() throws Exception {
         actor.registerReminder();
